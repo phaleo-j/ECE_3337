@@ -1,8 +1,8 @@
 `timescale 1ns / 1ps
 module vga_timing(
     input  wire pixel_clk,
-    output wire hsync,
-    output wire vsync,
+    output wire Hsync,
+    output wire Vsync,
     output reg  [9:0] h_count = 10'd0,
     output reg  [9:0] v_count = 10'd0,
     output wire new_frame
@@ -34,18 +34,19 @@ module vga_timing(
     end
 
     // Sync pulses (active low)
-    assign hsync = ~(h_count >= (H_VISIBLE + H_FRONT) &&
+    assign Hsync = ~(h_count >= (H_VISIBLE + H_FRONT) &&
                      h_count <  (H_VISIBLE + H_FRONT + H_SYNC));
 
-    assign vsync = ~(v_count >= (V_VISIBLE + V_FRONT) &&
+    assign Vsync = ~(v_count >= (V_VISIBLE + V_FRONT) &&
                      v_count <  (V_VISIBLE + V_FRONT + V_SYNC));
 
     // new_frame tick: VSYNC falling edge
     reg vsync_d = 1'b1;
     always @(posedge pixel_clk)
-        vsync_d <= vsync;
+        vsync_d <= Vsync;
 
-    assign new_frame = (vsync_d == 1'b1) && (vsync == 1'b0);
+    assign new_frame = (vsync_d == 1'b1) && (Vsync == 1'b0);
 
 endmodule
+
 
