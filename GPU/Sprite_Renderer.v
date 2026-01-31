@@ -4,11 +4,11 @@ module Sprite_Renderer #(
 )(
     input  wire [9:0] h_count,
     input  wire [9:0] v_count,
-    input  wire [9:0] pixel_x,
-    input  wire [9:0] pixel_y,
     output reg  [3:0] vgaRed,
     output reg  [3:0] vgaGreen,
-    output reg  [3:0] vgaBlue
+    output reg  [3:0] vgaBlue,
+    output reg  [9:0] player_x,
+    output reg  [9:0] player_y
 );
 
     localparam H_VISIBLE = 640;
@@ -23,8 +23,8 @@ module Sprite_Renderer #(
         // Only draw in visible region
         if (h_count < H_VISIBLE && v_count < V_VISIBLE) begin
             // Range check (underflow-safe form)
-            if ( (h_count + HALF >= pixel_x) && (h_count <= pixel_x + HALF) &&
-                 (v_count + HALF >= pixel_y) && (v_count <= pixel_y + HALF) ) begin
+            if ( (h_count + HALF >= player_x) && (h_count <= player_x + HALF) &&
+                 (v_count + HALF >= player_y) && (v_count <= player_y + HALF) ) begin
                 vgaRed   = 4'hF;
                 vgaGreen = 4'hF;
                 vgaBlue  = 4'hF;
@@ -33,3 +33,4 @@ module Sprite_Renderer #(
     end
 
 endmodule
+
