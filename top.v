@@ -18,7 +18,38 @@ module top(
     wire [9:0] side_x, side_y;
     wire [9:0] block_x, block_y;
     wire hit_fall, hit_side, hit_any;
+    wire [3:0] bgR, bgG, bgB;
     wire game_over;
+    wire moving;
+    wire logic_tick;
+    wire ui_on;
+    wire [3:0] uiR, uiG, uiB;
+    wire in_air;
+    wire [1:0] pose;
+    reg [15:0] scroll_x = 10'd0;
+    reg [2:0] scroll_div = 3'd0;   // slows scrolling
+
+always @(posedge pixel_clk) begin
+    if (btnC) begin
+        scroll_x   <= 10'd0;
+        scroll_div <= 3'd0;
+    end else if (new_frame) begin
+        // scroll once every 8 frames (~7.5 px/sec @60fps)
+        scroll_div <= scroll_div + 1'b1;
+        if (scroll_div == 3'd7) begin
+            scroll_div <= 3'd0;
+            if (scroll_x == 10'd639) scroll_x <= 10'd0;
+            else                      scroll_x <= scroll_x + 1'b1;
+        end
+    end
+end
+
+reg [9:0] h_d, v_d;
+
+always @(posedge pixel_clk) begin
+    h_d <= h_count;
+    v_d <= v_count;
+end
 
     // --- Clock divider: 100 MHz -> 25 MHz ---
     Clock_div u_clk (
@@ -57,20 +88,35 @@ module top(
         .block_y(block_y)
     );
 
-    // --- Renderer (draw player + falling block) ---
-    Sprite_Renderer u_render (
-        .h_count(h_count),
-        .v_count(v_count),
-        .player_x(player_x),
-        .player_y(player_y),
-        .block_x(block_x),   
-        .block_y(block_y),
-        .side_x(side_x),
-        .side_y(side_y),  
-        .vgaRed(vgaRed),
-        .vgaGreen(vgaGreen),
-        .vgaBlue(vgaBlue)
-    );
+   Sprite_Renderer u_render (
+    .pixel_clk(pixel_clk),   // NEW (required)
+    .h_count(h_d),
+    .v_count(v_d),
+
+    .bgR(bgR),
+    .bgG(bgG),
+    .bgB(bgB),
+
+    .ui_on(ui_on),
+    .uiR(uiR),
+    .uiG(uiG),
+    .uiB(uiB),
+
+    .player_x(player_x),
+    .player_y(player_y),
+    .block_x(block_x),
+    .block_y(block_y),
+    .side_x(side_x),
+    .side_y(side_y),
+
+    .pose(pose),
+    .game_over(game_over),
+
+    .vgaRed(vgaRed),
+    .vgaGreen(vgaGreen),
+    .vgaBlue(vgaBlue)
+);
+
     
     side_block #(
     .HALF(10'd20),
@@ -87,13 +133,15 @@ module top(
 
 Physics u_player (
     .pixel_clk(pixel_clk),
-    .game_tick(game_tick),
     .game_over(game_over),
 
     .btnL(btnL),
     .btnR(btnR),
     .btnU(btnU),
     .reset_btn(btnC),
+    .moving(moving),
+    .in_air(in_air),
+    .logic_tick(logic_tick),
 
     .player_x(player_x),
     .player_y(player_y)
@@ -119,18 +167,55 @@ You_died u_go (
     .game_over(game_over)
 );
 
+Anim_Tick #(.TOGGLE_TICKS(8)) u_anim (
+    .pixel_clk(pixel_clk),
+    .game_tick(game_tick),
+    .reset_btn(btnC),
+    .moving(moving),
+    .frame_sel(frame_sel)
+);
 
-assign hit_any = hit_fall | hit_side;
-    // LED debug 
-    assign LED[0] = btnL;
-    assign LED[1] = btnR;
-    assign LED[2] = btnU;
-    assign LED[3] = btnD;
-    assign LED[4] = btnC;
-    assign LED[5] = game_tick;   // should blink
-    assign LED[6] = hit_any;     // should light when overlap happens
-    assign LED[7] = game_over;   // should latch ON after a hit
-    assign LED[15:12] = player_x[9:6];
-    assign LED[11:8] =  side_x[9:6];
+Anim_Pose #(.TOGGLE_TICKS(8)) u_pose (
+    .pixel_clk(pixel_clk),
+    .game_tick(game_tick),
+    .reset_btn(btnC),
+    .moving(moving),
+    .in_air(in_air),
+    .pose(pose)
+);
 
+Logic_tick u_logic (
+    .pixel_clk(pixel_clk),
+    .logic_tick(logic_tick)
+);
+
+
+UI_Renderer u_ui (
+    .pixel_clk(pixel_clk),   // NEW
+    .h_count(h_d),
+    .v_count(v_d),
+    .visible((h_d < 10'd640) && (v_d < 10'd480)),
+
+    .game_over(game_over),
+
+    .score_thousands(4'd0),
+    .score_hundreds (4'd0),
+    .score_tens     (4'd0),
+    .score_ones     (4'd0),
+
+    .ui_on(ui_on),
+    .uiR(uiR),
+    .uiG(uiG),
+    .uiB(uiB)
+);
+
+Background_Renderer u_bg (
+    .pixel_clk(pixel_clk),
+    .h_count(h_d),
+    .v_count(v_d),
+    .scroll_x(scroll_x),
+    .bgR(bgR),
+    .bgG(bgG),
+    .bgB(bgB)
+);
 endmodule
