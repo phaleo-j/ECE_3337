@@ -1,23 +1,5 @@
 `timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 03/04/2026 10:30:10 AM
-// Design Name: 
-// Module Name: Datapath
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
+
 
 
 module Datapath(
@@ -43,7 +25,8 @@ module Datapath(
 
     // To control unit
     output wire        zero_flag,
-    output wire [3:0]  opcode
+    output wire [3:0]  opcode,
+    output wire [2:0]  funct
 );
 
     // ====================================
@@ -63,6 +46,7 @@ module Datapath(
     // ====================================
 
     assign opcode = IR[15:12];
+    assign funct =  IR[2:0]; //NEW, funct bits
 
     wire [2:0] rd = IR[11:9];
     wire [2:0] rs = IR[8:6];
@@ -73,7 +57,7 @@ module Datapath(
     // 6-bit → 8-bit sign extend
     wire [7:0] imm6_ext = {{2{imm6[5]}}, imm6};
 
-    // 6-bit → 16-bit sign extend (for branch) //12-bit to 16-bit sign extension
+    // 6-bit → 16-bit sign extend (for branch) 
     wire [15:0] imm6_ext_16 = {{10{imm6[5]}}, imm6};
 
     // ====================================
