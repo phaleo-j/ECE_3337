@@ -74,6 +74,8 @@ module Control_Unit(
             S_DECODE: begin
                 case (opcode)
                     4'b0000: next_state = S_EXECUTE; // R-type
+                    
+                    
                     4'b0001, 4'b1010, 4'b1011:
                                next_state = S_EXECUTE; // ADDI/ANDI/ORI
                     4'b0010, 4'b0011:
@@ -98,7 +100,7 @@ module Control_Unit(
             end
 
             S_MEM:
-                next_state = (opcode == 4'b0010) ? S_WB : S_FETCH;
+              next_state = (opcode == 4'b0010) ? S_WB : S_FETCH;
 
             S_WB:
                 next_state = S_FETCH;
@@ -143,7 +145,7 @@ module Control_Unit(
                 IRWrite = 1;
                 PCWrite = 1;
                 PCSrc   = 0;
-                IorD    = 0;
+                IorD    = 0; //added IorD
             end
 
             S_EXECUTE: begin
@@ -169,7 +171,7 @@ module Control_Unit(
             S_MEM: begin
                 IorD = 1;
                 if (opcode == 4'b0011)
-                    MemWrite = 1; // STORE
+                    MemWrite = 1; // ENABLED WRITE TO MEMORY FOR STORE INSTRUCTION TO WORK PROPERLY
             end
 
             S_WB: begin
