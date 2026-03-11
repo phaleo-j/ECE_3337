@@ -48,6 +48,7 @@ module cpu_top(
 
     wire        zero_flag;
     wire [3:0]  opcode;
+    wire [2:0]  funct;
 
     // ====================================
     // Instruction Memory
@@ -98,7 +99,8 @@ module cpu_top(
         .mem_write_data(mem_write_data),
 
         .zero_flag(zero_flag),
-        .opcode(opcode)
+        .opcode(opcode),
+        .funct(funct)  //NEW, added ALUSubop
     );
 
     // ====================================
@@ -110,6 +112,7 @@ module cpu_top(
         .reset(reset),
 
         .opcode(opcode),
+        .funct(funct),
         .zero_flag(zero_flag),
 
         .RegWrite(RegWrite),
